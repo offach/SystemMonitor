@@ -1,9 +1,14 @@
 import tkinter as tk
-from tkinter import ttk
-import psutil
-import GPUtil
-from threading import Thread
 from tkinter import messagebox
+import psutil
+import platform
+
+# GPUtil only works on Windows/Linux with NVIDIA GPUs
+try:
+    import GPUtil
+    GPU_AVAILABLE = True
+except ImportError:
+    GPU_AVAILABLE = False
 
 class SystemMonitorApp:
     def __init__(self, root):
@@ -44,9 +49,10 @@ class SystemMonitorApp:
     def update_metrics(self):
         try:
             for i, metric in enumerate(self.selected_metrics):
-                value = self.metrics[metric]()
-                self.metric_labels[i].config(text=f"{metric}: {value}")
-        except Exception as e:
+                if i < len(self.metric_labels):
+                    value = self.metrics[metric]()
+                    self.metric_labels[i].config(text=f"{metric}: {value}")
+        except Exception:
             pass
 
         self.root.after(5000, self.update_metrics)  # Update every 5 seconds
@@ -120,11 +126,13 @@ class SystemMonitorApp:
         messagebox.showinfo("Информация", "Создатель: offach\nКонтакт: me@offach.ru")
 
     def get_gpu_temperature(self):
+        if not GPU_AVAILABLE:
+            return "N/A (Mac/No GPU)"
         try:
             gpus = GPUtil.getGPUs()
             if gpus:
                 return f"{gpus[0].temperature}°C"
-        except Exception as e:
+        except Exception:
             return "N/A"
         return "N/A"
 
@@ -132,11 +140,13 @@ class SystemMonitorApp:
         return f"{psutil.cpu_percent()}%"
 
     def get_gpu_usage(self):
+        if not GPU_AVAILABLE:
+            return "N/A (Mac/No GPU)"
         try:
             gpus = GPUtil.getGPUs()
             if gpus:
                 return f"{gpus[0].load * 100:.1f}%"
-        except Exception as e:
+        except Exception:
             return "N/A"
         return "N/A"
 
@@ -144,7 +154,15 @@ class SystemMonitorApp:
         return f"{psutil.virtual_memory().percent}%"
 
     def get_disk_usage(self):
-        return f"{psutil.disk_usage('/').percent}%"
+        try:
+            # Platform-specific root path
+            if platform.system() == 'Windows':
+                root_path = 'C:\\'
+            else:
+                root_path = '/'
+            return f"{psutil.disk_usage(root_path).percent}%"
+        except Exception:
+            return "N/A"
 
 
 if __name__ == "__main__":

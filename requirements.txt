@@ -1,0 +1,4 @@
+psutil>=5.9.0
+gputil>=1.4.0; sys_platform != "darwin"
+pyinstaller>=5.0.0
+
