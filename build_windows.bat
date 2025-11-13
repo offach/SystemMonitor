@@ -19,7 +19,6 @@ echo Creating Windows executable...
 pyinstaller --onefile ^
     --windowed ^
     --name SystemMonitor ^
-    --icon=NONE ^
     main.py
 
 if exist "dist\SystemMonitor.exe" (
